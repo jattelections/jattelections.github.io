@@ -2,7 +2,6 @@
 <meta charset="utf-8">
 <link rel="shortcut icon" type="image/x-icon" href="/favicon.ico?">
 <style>
-
     body {
         font: 10px sans-serif;
         background-image: url("pattern.jpg");
@@ -13,11 +12,41 @@
         font: 60px sans-serif;
     }
 
-    .arc path {
-        stroke: #fff;
+    .axis text {
+        font: 20px sans-serif;
     }
 
+    .axis path,
+    .axis line {
+        fill: none;
+        stroke: #000;
+        shape-rendering: crispEdges;
+    }
+
+    .x.axis path {
+        display: none;
+    }
+
+.bar.white {
+    fill: white;
+}
+
+.bar.green {
+    fill: green;
+}
+
+.bar.blue {
+    fill: steelblue;
+}
+
 </style>
+<img src="logo.jpg" />
+<h1 align="center">
+    انتخابات جت - الجولة الثانية
+</h1>
+<div class="votecount" align="center">
+</div>
+<script src="https://d3js.org/d3.v3.min.js" charset="utf-8"></script>
 <script>
     function mapEntries(json, realrowlength, skip){
         if (!skip) skip = 0;
@@ -43,69 +72,85 @@
         return dataframe;
     }
 </script>
-<body>
-    <img src="logo.jpg" />
-    <h1 align="center">
-        انتخابات جت - الجولة الثانية
-    </h1>
-    <div class="votecount" align="center" ></div>
-    <script src="https://d3js.org/d3.v3.min.js" charset="utf-8"></script>
-    <script>
+<script>
+    var margin = {top: 60, right: 30, bottom: 30, left: 80},
+        width = 960 - margin.left - margin.right,
+        height = 500 - margin.top - margin.bottom;
 
-        var width = 960,
-            height = 500,
-            radius = Math.min(width, height) / 2;
+    var svg = d3.select(".votecount").append("svg")
+    .attr("width", width + margin.left + margin.right)
+    .attr("height", height + margin.top + margin.bottom)
+    .attr("class", "chart")
+    .append("g")
+    .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
 
-        var color = d3.scale.ordinal()
-        .range(["#ffffff", "#33cc33", "#33ccff"]);
+    var x = d3.scale.ordinal()
+    .rangeRoundBands([0, width], .1);
 
-        var arc = d3.svg.arc()
-                    .outerRadius(radius - 10)
-                    .innerRadius(0);
+    var y = d3.scale.linear()
+    .range([height, 0]);
 
-        var pie = d3.layout.pie()
-                    .sort(null)
-                    .value(function(d) { return d.population; });
+    var xAxis = d3.svg.axis()
+    .scale(x)
+    .orient("bottom");
 
-        var svg = d3.select(".votecount").append("svg")
-                    .attr("width", width)
-                    .attr("height", height)
-                    .append("g")
-                    .attr("transform", "translate(" + width / 2 + "," + height / 2 + ")");
+    var yAxis = d3.svg.axis()
+    .scale(y)
+    .orient("left");
 
-        function sheetLoaded(spreadsheetdata) {
-            dataframe = mapEntries(spreadsheetdata, null, 2)
-            d = []
+    var chart = d3.select(".chart")
+    .attr("width", width + margin.left + margin.right)
+    .attr("height", height + margin.top + margin.bottom)
+    .append("g")
+    .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+
+    function sheetLoaded(spreadsheetdata) {
+        dataframe = mapEntries(spreadsheetdata, null, 2)
+        data = []
+        var colors = ['white', 'green', 'blue'];
             for (i=0;i<dataframe.length;i++) {
                 p = 0;
                 for (j=1;j<12;j++) {
                     p += +dataframe[i][j]
                 }
-                d.push({name: dataframe[i][0], population: p});
+                data.push({name: dataframe[i][0], value: p, color: colors[i]});
             }
+            x.domain(data.map(function(d) { return d.name; }));
+            y.domain([0, d3.max(data, function(d) { return d.value; })]);
 
-            var g = svg.selectAll(".arc")
-                    .data(pie(d))
-                    .enter()
-                    .append("g")
-                    .attr("class", "arc");
+            chart.append("g")
+            .attr("class", "x axis")
+            .attr("transform", "translate(0," + height + ")")
+            .call(xAxis);
 
-            g.append("path")
-                    .attr("d", arc)
-                    .style("fill", function(d) { return color(d.data.name); });
+            chart.append("g")
+            .attr("class", "y axis")
+            .call(yAxis);
 
-            g.append("text")
-            .attr("transform", function(d) { return "translate(" + arc.centroid(d) + ")"; })
-            .attr("dy", ".35em")
-            .style("text-anchor", "middle")
-            .style("font-size", 24)
-            .text(function(d) { return d.data.name + ' - ' + d.data.population });
-        }
-    </script>
-    <script src="https://spreadsheets.google.com/feeds/cells/1I8RlCF8_LTI9mTnVEs1XvRJs68FAbRsVWpLEKcZxev4/od6/public/values?alt=json-in-script&callback=sheetLoaded"></script>
-    <script>
-        setTimeout(function () {
-            location.reload()
-        }, 15000);
-    </script>
-</body>
+            chart.selectAll(".bar")
+            .data(data)
+            .enter().append("rect")
+            .attr("class", function(d) { return "bar " + d.color })
+            .attr("x", function(d) { return x(d.name); })
+            .attr("y", function(d) { return y(d.value); })
+            .attr("height", function(d) { return height - y(d.value); })
+            .attr("width", x.rangeBand());
+
+            svg.selectAll("text.bar")
+            .data(data)
+            .enter().append("text")
+            .attr("class", "bar")
+            .attr("text-anchor", "middle")
+            .attr("x", function(d) { return x(d.name) + x.rangeBand() / 2; })
+            .attr("y", function(d) { return y(d.value) - 10; })
+            .style("font-size", 40)
+            .text(function(d) { return d.value; });
+
+    }
+</script>
+<script src="https://spreadsheets.google.com/feeds/cells/1I8RlCF8_LTI9mTnVEs1XvRJs68FAbRsVWpLEKcZxev4/od6/public/values?alt=json-in-script&callback=sheetLoaded"></script>
+<script>
+    setTimeout(function () {
+        location.reload()
+    }, 15000);
+</script>
