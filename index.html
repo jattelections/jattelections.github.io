@@ -1,156 +1,112 @@
 <!DOCTYPE html>
-<meta charset="utf-8">
-<link rel="shortcut icon" type="image/x-icon" href="/favicon.ico?">
-<style>
-    body {
-        font: 10px sans-serif;
-        background-image: url("pattern.jpg");
-        background-repeat: repeat;
-    }
+<html>
+    <head>
+        <title> انتخابات جت  </title>
+        <meta charset="utf-8">
+        <link rel="shortcut icon" type="image/x-icon" href="/favicon.ico?">
+        <style>
+            body {
+                background-image: url("pattern.jpg");
+                background-repeat: repeat;
+            }
+            .center {
+                margin: auto;
+                width: 60%;
+                border:3px solid #73AD21;
+                padding: 10px;
+            }
+        </style>
+        <script type="text/javascript" src="https://www.google.com/jsapi"></script>
+        <script type="text/javascript">
+            google.load("visualization", "1", {packages:["corechart"]});
+        </script>
+        <script type="text/javascript">
+            function mapEntries(json, realrowlength, skip){
+                if (!skip) skip = 0;
+                var dataframe = new Array();
+                var row = new Array();
+                for (var i=0; i < json.feed.entry.length; i++) {
 
-    h1 {
-        font: 60px sans-serif;
-    }
+                    var entry = json.feed.entry[i];
+                    if (entry.gs$cell.col == '1') {
+                        if (row != null) {
+                            if ((!realrowlength || row.length === realrowlength) && (skip  === 0)){
+                                dataframe.push(row);
+                            } else {
+                                if (skip > 0) skip--;
+                            }
+                        }
 
-    .axis text {
-        font: 20px sans-serif;
-    }
-
-    .axis path,
-    .axis line {
-        fill: none;
-        stroke: #000;
-        shape-rendering: crispEdges;
-    }
-
-    .x.axis path {
-        display: none;
-    }
-
-.bar.white {
-    fill: white;
-}
-
-.bar.green {
-    fill: green;
-}
-
-.bar.blue {
-    fill: steelblue;
-}
-
-</style>
-<img src="logo.jpg" />
-<h1 align="center">
-    انتخابات جت - الجولة الثانية
-</h1>
-<div class="votecount" align="center">
-</div>
-<script src="https://d3js.org/d3.v3.min.js" charset="utf-8"></script>
-<script>
-    function mapEntries(json, realrowlength, skip){
-        if (!skip) skip = 0;
-        var dataframe = new Array();
-        var row = new Array();
-        for (var i=0; i < json.feed.entry.length; i++) {
-
-            var entry = json.feed.entry[i];
-            if (entry.gs$cell.col == '1') {
-                if (row != null) {
-                    if ((!realrowlength || row.length === realrowlength) && (skip  === 0)){
-                        dataframe.push(row);
-                    } else {
-                        if (skip > 0) skip--;
+                        var row = new Array();
+                    }
+                    row.push(entry.content.$t);
+                } 
+                dataframe.push(row);
+                return dataframe;
+            }
+            function sheetLoaded(spreadsheetdata) {
+                var colors = ['white', 'green', '#06c'];
+                dataframe = mapEntries(spreadsheetdata, null, 2)
+                var arr = []
+                arr.push(['المرشح', 'أصوات', { role: 'style' } ]);
+                for (i=0; i < dataframe.length; i++) {
+                    var votes = 0;
+                    for (j = 1; j < 12; j++) {
+                        votes += +dataframe[i][j];
+                    }
+                    arr.push([dataframe[i][0], votes, 'fill-color: ' + colors[i] + '; opacity: 0.4; stroke-width:2; stroke-color:black']);
+                }
+                var data = google.visualization.arrayToDataTable(arr)
+                var view = new google.visualization.DataView(data);
+                view.setColumns([0, 1,
+                                { calc: "stringify",
+                                    sourceColumn: 1,
+                                    type: "string",
+                                    role: "annotation" },
+                                    2]);
+                var options = {
+                    backgroundColor: { fill:'transparent' },
+                    legend: { position: 'none' },
+                    annotations: {
+                        textStyle: {
+                            fontSize: 40,
+                        }
+                    },
+                    chart: {
+                        title: 'النتائج',
+                        fontSize: 30,
+                        fontName: 'sans-serif',
+                    },
+                    hAxis: {
+                        textStyle: {
+                            fontSize: 30
+                        }
+                    },
+                    vAxis: {
+                        title: 'أصوات',
+                        titleTextStyle: {
+                            fontSize: 30
+                        },
+                        textStyle: {
+                            fontSize: 30
+                        }
                     }
                 }
 
-                var row = new Array();
+                var chart = new google.visualization.ColumnChart(document.getElementById('chart'));
+                chart.draw(view, options);
             }
-            row.push(entry.content.$t);
-        } 
-        dataframe.push(row);
-        return dataframe;
-    }
-</script>
-<script>
-    var margin = {top: 60, right: 30, bottom: 30, left: 80},
-        width = 960 - margin.left - margin.right,
-        height = 500 - margin.top - margin.bottom;
-
-    var svg = d3.select(".votecount").append("svg")
-    .attr("width", width + margin.left + margin.right)
-    .attr("height", height + margin.top + margin.bottom)
-    .attr("class", "chart")
-    .append("g")
-    .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
-
-    var x = d3.scale.ordinal()
-    .rangeRoundBands([0, width], .1);
-
-    var y = d3.scale.linear()
-    .range([height, 0]);
-
-    var xAxis = d3.svg.axis()
-    .scale(x)
-    .orient("bottom");
-
-    var yAxis = d3.svg.axis()
-    .scale(y)
-    .orient("left");
-
-    var chart = d3.select(".chart")
-    .attr("width", width + margin.left + margin.right)
-    .attr("height", height + margin.top + margin.bottom)
-    .append("g")
-    .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
-
-    function sheetLoaded(spreadsheetdata) {
-        dataframe = mapEntries(spreadsheetdata, null, 2)
-        data = []
-        var colors = ['white', 'green', 'blue'];
-            for (i=0;i<dataframe.length;i++) {
-                p = 0;
-                for (j=1;j<12;j++) {
-                    p += +dataframe[i][j]
-                }
-                data.push({name: dataframe[i][0], value: p, color: colors[i]});
-            }
-            x.domain(data.map(function(d) { return d.name; }));
-            y.domain([0, d3.max(data, function(d) { return d.value; })]);
-
-            chart.append("g")
-            .attr("class", "x axis")
-            .attr("transform", "translate(0," + height + ")")
-            .call(xAxis);
-
-            chart.append("g")
-            .attr("class", "y axis")
-            .call(yAxis);
-
-            chart.selectAll(".bar")
-            .data(data)
-            .enter().append("rect")
-            .attr("class", function(d) { return "bar " + d.color })
-            .attr("x", function(d) { return x(d.name); })
-            .attr("y", function(d) { return y(d.value); })
-            .attr("height", function(d) { return height - y(d.value); })
-            .attr("width", x.rangeBand());
-
-            svg.selectAll("text.bar")
-            .data(data)
-            .enter().append("text")
-            .attr("class", "bar")
-            .attr("text-anchor", "middle")
-            .attr("x", function(d) { return x(d.name) + x.rangeBand() / 2; })
-            .attr("y", function(d) { return y(d.value) - 10; })
-            .style("font-size", 40)
-            .text(function(d) { return d.value; });
-
-    }
-</script>
-<script src="https://spreadsheets.google.com/feeds/cells/1I8RlCF8_LTI9mTnVEs1XvRJs68FAbRsVWpLEKcZxev4/od6/public/values?alt=json-in-script&callback=sheetLoaded"></script>
-<script>
-    setTimeout(function () {
-        location.reload()
-    }, 15000);
-</script>
+            setTimeout(function () {
+                location.reload()
+            }, 15000);
+        </script>
+    </head>
+    <body>
+        <img src="logo.jpg" style="display: block; margin-left:auto; margin-right: auto" > </img>
+        <h1 align="center">
+            انتخابات جت - الجولة الثانية
+        </h1>
+        <div id="chart" class="center" style="width: 900px; height: 500px;" align="center"></div>
+        <script src="https://spreadsheets.google.com/feeds/cells/1I8RlCF8_LTI9mTnVEs1XvRJs68FAbRsVWpLEKcZxev4/od6/public/values?alt=json-in-script&callback=sheetLoaded"></script>
+    </body>
+</html>
