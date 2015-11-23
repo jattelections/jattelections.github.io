@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<meta charset="utf-8">
+<style>
+
+    body {
+        font: 10px sans-serif;
+        background-image: url("pattern.jpg");
+        background-repeat: repeat;
+    }
+
+    h1 {
+        font: 60px sans-serif;
+    }
+
+    .arc path {
+        stroke: #fff;
+    }
+
+</style>
+<script>
+    function mapEntries(json, realrowlength, skip){
+        if (!skip) skip = 0;
+        var dataframe = new Array();
+        var row = new Array();
+        for (var i=0; i < json.feed.entry.length; i++) {
+
+            var entry = json.feed.entry[i];
+            if (entry.gs$cell.col == '1') {
+                if (row != null) {
+                    if ((!realrowlength || row.length === realrowlength) && (skip  === 0)){
+                        dataframe.push(row);
+                    } else {
+                        if (skip > 0) skip--;
+                    }
+                }
+
+                var row = new Array();
+            }
+            row.push(entry.content.$t);
+        } 
+        dataframe.push(row);
+        return dataframe;
+    }
+</script>
+<body>
+    <h1 align="center">
+        انتخابات جت - الجولة الثانية
+    </h1>
+    <div class="votecount" align="center" ></div>
+    <script src="http://d3js.org/d3.v3.min.js" charset="utf-8"></script>
+    <script>
+
+        var width = 960,
+            height = 500,
+            radius = Math.min(width, height) / 2;
+
+        var color = d3.scale.ordinal()
+        .range(["#33cc33", "#33ccff", "#ffffff"]);
+
+        var arc = d3.svg.arc()
+                    .outerRadius(radius - 10)
+                    .innerRadius(0);
+
+        var pie = d3.layout.pie()
+                    .sort(null)
+                    .value(function(d) { return d.population; });
+
+        var svg = d3.select(".votecount").append("svg")
+                    .attr("width", width)
+                    .attr("height", height)
+                    .append("g")
+                    .attr("transform", "translate(" + width / 2 + "," + height / 2 + ")");
+
+        function sheetLoaded(spreadsheetdata) {
+            dataframe = mapEntries(spreadsheetdata, null, 2)
+            d = []
+            for (i=0;i<dataframe.length;i++) {
+                p = 0;
+                for (j=1;j<12;j++) {
+                    p += +dataframe[i][j]
+                }
+                d.push({name: dataframe[i][0], population: p});
+            }
+
+            var g = svg.selectAll(".arc")
+                    .data(pie(d))
+                    .enter()
+                    .append("g")
+                    .attr("class", "arc");
+
+            g.append("path")
+                    .attr("d", arc)
+                    .style("fill", function(d) { return color(d.data.name); });
+
+            g.append("text")
+            .attr("transform", function(d) { return "translate(" + arc.centroid(d) + ")"; })
+            .attr("dy", ".35em")
+            .style("text-anchor", "middle")
+            .style("font-size", 24)
+            .text(function(d) { return d.data.name + ' - ' + d.data.population });
+        }
+    </script>
+    <script src="https://spreadsheets.google.com/feeds/cells/1I8RlCF8_LTI9mTnVEs1XvRJs68FAbRsVWpLEKcZxev4/od6/public/values?alt=json-in-script&callback=sheetLoaded"></script>
+    <script>
+        setTimeout(function () {
+            location.reload()
+        }, 15000);
+    </script>
+</body>
