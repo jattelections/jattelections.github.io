@@ -53,8 +53,8 @@
                 arr.push(['المرشح', 'أصوات', { role: 'style' } ]);
                 for (i=0; i < 3; i++) {
                     var votes = 0;
-                    votes = +data[i][13];
-                    arr.push([data[i][0], votes, 'fill-color: ' + colors[i] + '; opacity: 0.4; stroke-width:2; stroke-color:black']);
+                    votes = +data[i+1][13];
+                    arr.push([data[i+1][0], votes, 'fill-color: ' + colors[i] + '; opacity: 0.4; stroke-width:2; stroke-color:black']);
                 }
                 var data = google.visualization.arrayToDataTable(arr)
                 var view = new google.visualization.DataView(data);
@@ -99,8 +99,8 @@
             function drawgauges(data) {
                 var d = google.visualization.arrayToDataTable([
                     ['Label', 'Value'],
-                    [data[6][0], +data[6][13]],
                     [data[7][0], +data[7][13]],
+                    [data[8][0], +data[8][13]],
                 ]);
 
                 var options = {
@@ -115,10 +115,61 @@
                 chart.draw(d, options);
             }
 
+            function drawboxes(data) {
+                var arr = []
+                arr.push(['صندوق', 'نسبة الفرز', { role: 'style' } ]);
+                for (i=1; i <= 12; i++) {
+                    var p = +data[8][i]
+                    arr.push([data[0][i], p, 'opacity: 0.4']);
+                }
+                var data = google.visualization.arrayToDataTable(arr)
+                var view = new google.visualization.DataView(data);
+                view.setColumns([0, 1,
+                                { calc: "stringify",
+                                    sourceColumn: 1,
+                                    type: "string",
+                                    role: "annotation" },
+                                    2]);
+                var options = {
+                    backgroundColor: { fill:'transparent' },
+                    legend: { position: 'none' },
+                    annotations: {
+                        textStyle: {
+                            fontSize: 20,
+                        }
+                    },
+                    chart: {
+                        title: 'نسبة الفرز',
+                        fontSize: 20,
+                        fontName: 'sans-serif',
+                    },
+                    hAxis: {
+                        title: 'صندوق',
+                        textStyle: {
+                            fontSize: 20
+                        }
+                    },
+                    vAxis: {
+                        title: 'نسبة الفرز %',
+                        maxValue: 100,
+                        titleTextStyle: {
+                            fontSize: 20
+                        },
+                        textStyle: {
+                            fontSize: 20
+                        }
+                    }
+                }
+
+                var chart = new google.visualization.ColumnChart(document.getElementById('box_div'));
+                chart.draw(view, options);
+            }
+
             function sheetLoaded(spreadsheetdata) {
-                dataframe = mapEntries(spreadsheetdata, null, 2)
+                dataframe = mapEntries(spreadsheetdata, null, 1)
                 drawbars(dataframe);
                 drawgauges(dataframe);
+                drawboxes(dataframe);
             }
         </script>
         <script>
@@ -139,6 +190,7 @@
         </h1>
         <div id="gauges_div" class="center" style="width: 480px; height: 240px;"></div>
         <div id="chart" class="center border" style="width: 900px; height: 500px;"></div>
+        <div id="box_div" class="center border" style="width: 900px; height: 500px;"></div>
         <script>
             (function worker() {
                 $.ajax({
