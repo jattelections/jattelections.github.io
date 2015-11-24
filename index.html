@@ -50,7 +50,7 @@
                 dataframe = mapEntries(spreadsheetdata, null, 2)
                 var arr = []
                 arr.push(['المرشح', 'أصوات', { role: 'style' } ]);
-                for (i=0; i < dataframe.length; i++) {
+                for (i=0; i < 3; i++) {
                     var votes = 0;
                     for (j = 1; j < 12; j++) {
                         votes += +dataframe[i][j];
