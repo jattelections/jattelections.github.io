@@ -48,7 +48,7 @@
                 return dataframe;
             }
             function drawbars(data) {
-                var colors = ['white', 'green', '#06c'];
+                var colors = ['#ff9', 'green', '#06c'];
                 var arr = []
                 arr.push(['المرشح', 'أصوات', { role: 'style' } ]);
                 for (i=0; i < 3; i++) {
@@ -170,7 +170,7 @@
                 data.addColumn('string', 'صندوق');
                 data.addColumn('number', 'خالد غرة');
                 data.addColumn('number', 'محمد وتد');
-                data.addColumn('number', 'أبيض');
+                data.addColumn('number', 'ملغي');
 
                 for (i=1; i<=12; i++) {
                     data.addRow([d[0][i], +d[2][i], +d[3][i], +d[1][i]]);
@@ -189,7 +189,7 @@
                     series: {
                         0:{color:'green'},
                         1:{color:'#06c'},
-                        2:{color:'white'},
+                        2:{color:'#ff9'},
                     }
                 };
 
