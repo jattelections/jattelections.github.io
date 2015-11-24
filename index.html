@@ -45,17 +45,14 @@
                 dataframe.push(row);
                 return dataframe;
             }
-            function sheetLoaded(spreadsheetdata) {
+            function drawbars(data) {
                 var colors = ['white', 'green', '#06c'];
-                dataframe = mapEntries(spreadsheetdata, null, 2)
                 var arr = []
                 arr.push(['المرشح', 'أصوات', { role: 'style' } ]);
                 for (i=0; i < 3; i++) {
                     var votes = 0;
-                    for (j = 1; j < 12; j++) {
-                        votes += +dataframe[i][j];
-                    }
-                    arr.push([dataframe[i][0], votes, 'fill-color: ' + colors[i] + '; opacity: 0.4; stroke-width:2; stroke-color:black']);
+                    votes = +data[i][12];
+                    arr.push([data[i][0], votes, 'fill-color: ' + colors[i] + '; opacity: 0.4; stroke-width:2; stroke-color:black']);
                 }
                 var data = google.visualization.arrayToDataTable(arr)
                 var view = new google.visualization.DataView(data);
@@ -96,6 +93,10 @@
 
                 var chart = new google.visualization.ColumnChart(document.getElementById('chart'));
                 chart.draw(view, options);
+            }
+            function sheetLoaded(spreadsheetdata) {
+                dataframe = mapEntries(spreadsheetdata, null, 2)
+                drawbars(dataframe);
             }
         </script>
     </head>
