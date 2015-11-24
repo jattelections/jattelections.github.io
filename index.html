@@ -165,11 +165,44 @@
                 chart.draw(view, options);
             }
 
+            function drawvotesperbox(d) {
+                var data = new google.visualization.DataTable();
+                data.addColumn('string', 'صندوق');
+                data.addColumn('number', 'خالد غرة');
+                data.addColumn('number', 'محمد وتد');
+                data.addColumn('number', 'أبيض');
+
+                for (i=1; i<=12; i++) {
+                    data.addRow([d[0][i], +d[2][i], +d[3][i], +d[1][i]]);
+                }
+
+                var options = {
+                    title: 'النتائج في كل صندوق',
+                    backgroundColor: { fill:'transparent' },
+                    isStacked: true,
+                    hAxis: {
+                        title: 'صندوق',
+                    },
+                    vAxis: {
+                        title: 'أصوات'
+                    },
+                    series: {
+                        0:{color:'green'},
+                        1:{color:'#06c'},
+                        2:{color:'white'},
+                    }
+                };
+
+                var chart = new google.visualization.ColumnChart(document.getElementById('votebox_div'));
+                chart.draw(data, options);
+            }
+
             function sheetLoaded(spreadsheetdata) {
                 dataframe = mapEntries(spreadsheetdata, null, 1)
                 drawbars(dataframe);
                 drawgauges(dataframe);
                 drawboxes(dataframe);
+                drawvotesperbox(dataframe);
             }
         </script>
         <script>
@@ -191,6 +224,7 @@
         <div id="gauges_div" class="center" style="width: 480px; height: 240px;"></div>
         <div id="chart" class="center border" style="width: 900px; height: 500px;"></div>
         <div id="box_div" class="center border" style="width: 900px; height: 500px;"></div>
+        <div id="votebox_div" class="center border" style="width: 900px; height: 500px;"></div>
         <script>
             (function worker() {
                 $.ajax({
